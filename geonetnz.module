@@ -1,5 +1,6 @@
 <?php
 
+define('GEONETNZ_ENDPOINT', 'http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query');
 /**
  * Examples of QuakeML queries
 http://www.geonet.org.nz/resources/earthquake/quake-web-services.html
@@ -23,5 +24,42 @@ Earthquakes that occurred between the dates 2007-05-17 and 2007-05-19 inclusive,
 
 http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?startDate=2007-05-17&endDate=2007-05-18&latLower=-45&latUpper=-40&longLower=173&longUpper=176&depthLower=0&depthUpper=180&magnitudeLower=0&magnitudeUpper=7.5&stationsLower=5&phasesLower=5&errorUpper=0.15
 */
-function geonetnz_do_search() {
+function geonetnz_do_search($params) {
+  $url = GEONETNZ_ENDPOINT .'?';
+  //startDate=2007-05-17&endDate=2007-05-18&latLower=-45&latUpper=-40&longLower=173&longUpper=176&depthLower=0&depthUpper=180&magnitudeLower=0&magnitudeUpper=7.5&
+  foreach($params as $k=>$name) {
+    $urls .= urlencode("$k=$name&");
+  }
+}
+
+function geonetnz_menu() {
+  $items['geonetnz'] = array(
+    'title' => t('Earthquake Timeline'),
+    'page callback' => 'geonetnz_timeline_page'
+    'access arguments' => array('access content'),
+  );
+  $items['geonetnz/import'] = array(
+    'title' => t('Import'),
+    'page callback' => 'geonetnz_import'
+    'access arguments' => array('import geonet data'),
+  );
+}
+
+function geonetnz_timeline_page() {
+  
+}
+function geonetnz_importer() {
+  $batch = array(
+    'title' => t('Importing Earthquake Data'),
+    'operations' => array(
+      array('geonet_import_batch_process', array()),
+    ),
+    'finished' => 'my_finished_callback',
+  );
+  batch_set($batch);
+  // only needed if not inside a form _submit handler :
+  batch_process();
+}
+
+function geonet_import_batch_process(&$context) {
 }
