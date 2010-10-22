@@ -30,24 +30,54 @@ function geonetnz_do_search($params) {
   foreach($params as $k=>$name) {
     $urls .= urlencode("$k=$name&");
   }
+  
 }
+
 
 function geonetnz_menu() {
   $items['geonetnz'] = array(
+    'title' => t('Earthquake Search'),
+    'page callback' => 'geonetnz_search_page',
+    'access arguments' => array('access content'),
+  );
+  $items['geonetnz/timeline'] = array(
     'title' => t('Earthquake Timeline'),
-    'page callback' => 'geonetnz_timeline_page'
+    'page callback' => 'geonetnz_timeline_page',
     'access arguments' => array('access content'),
   );
   $items['geonetnz/import'] = array(
     'title' => t('Import'),
-    'page callback' => 'geonetnz_import'
+    'page callback' => 'geonetnz_import',
     'access arguments' => array('import geonet data'),
   );
+  return $items;
 }
 
 function geonetnz_timeline_page() {
-  
 }
+function geonetnz_search_page() {
+  $output = drupal_get_form('geonetnz_search_form');
+  return $output; 
+}
+
+function geonetnz_search_form() {
+  $form['startDate'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Start Date'),
+    '#description' => t('e.g. 2007-05-17'),
+    
+  );
+  $form['search'] = array(
+    '#value' => t('Search'),
+    '#type' => 'submit',
+  );
+  return $form;
+}
+function geonetnz_search_form_submit($form_id, $form_state) {
+  $startDate = $form_state['values']['startDate'];
+  drupal_goto("geonet?startDate=$startDate");
+}
+
 function geonetnz_importer() {
   $batch = array(
     'title' => t('Importing Earthquake Data'),
@@ -62,4 +92,9 @@ function geonetnz_importer() {
 }
 
 function geonet_import_batch_process(&$context) {
+  if (empty($context['sandbox'])) {
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['current_node'] = 0;
+    $context['sandbox']['max'] = db_result(db_query('SELECT COUNT(DISTINCT nid) FROM {node}'));
+  }
 }
