@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * Examples of QuakeML queries
+http://www.geonet.org.nz/resources/earthquake/quake-web-services.html
+Earthquake information for the specified reference number 2737452:
+
+http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?externalRef=2737452
+
+Earthquakes that occurred between the dates 2007-05-17 and 2007-05-18 (inclusive):
+
+http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?startDate=2007-05-17&endDate=2007-05-18
+
+Earthquakes that occurred between 10:00 on 2008-08-01 and 10:30 on 2008-08-01:
+
+http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?startDate=2008-08-01T10:00:00&endDate=2008-08-01T10:30:00
+
+Earthquakes that occurred between 10:00 on 2008-08-01 and 10:30 on 2008-08-01, together with picks, arrivals, amplitudes and magnitudes:
+
+http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?startDate=2008-08-01T10:00:00&endDate=2008-08-01T10:30:00&includePicksAndArrivals=true&includeAmplitudesAndStationMagnitudes=true&includeMultipleMagnitudes=true
+
+Earthquakes that occurred between the dates 2007-05-17 and 2007-05-19 inclusive, within the bounding box latLower=-45, latUpper=-40, longLower=173, longUpper=176 of magnitude up to 7.5 that occurred up to 180 km depth with at least 5 phases recorded and at least 5 stations and with a standard error maximum of 0.15 seconds:
+
+http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?startDate=2007-05-17&endDate=2007-05-18&latLower=-45&latUpper=-40&longLower=173&longUpper=176&depthLower=0&depthUpper=180&magnitudeLower=0&magnitudeUpper=7.5&stationsLower=5&phasesLower=5&errorUpper=0.15
+*/
+function geonetnz_do_search() {
+}
