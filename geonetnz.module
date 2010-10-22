@@ -39,9 +39,10 @@ function geonetnz_menu() {
     'title' => t('Earthquake Search'),
     'page callback' => 'geonetnz_search_page',
     'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
   );
   $items['geonetnz/timeline'] = array(
-    'title' => t('Earthquake Timeline'),
+    'title' => t('Timeline'),
     'page callback' => 'geonetnz_timeline_page',
     'access arguments' => array('access content'),
   );
@@ -65,8 +66,55 @@ function geonetnz_search_form() {
     '#type' => 'textfield',
     '#title' => t('Start Date'),
     '#description' => t('e.g. 2007-05-17'),
-    
   );
+  $form['endDate'] = array(
+    '#type' => 'textfield',
+    '#title' => t('End Date'),
+    '#description' => t('e.g. 2007-05-17'),
+  );
+  $form['latLower'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Latitude'),
+    '#description' => t('e.g. 2007-05-17'),
+  );
+  $form['latUpper'] = array(
+    '#type' => 'textfield',
+    '#title' => t('to Latitude'),
+    '#description' => t('e.g. 2007-05-17'),
+  );
+  $form['longLower'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Longitude'),
+    '#description' => t('e.g. 2007-05-17'),
+  );
+  $form['longUpper'] = array(
+    '#type' => 'textfield',
+    '#title' => t('to Longitude'),
+    '#description' => t('e.g. 2007-05-17'),
+  );
+  $form['depthLower'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Minimum Depth'),
+    '#description' => t('e.g. 2007-05-17'),
+  );
+  $form['depthUpper'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Maximum Depth'),
+    '#description' => t('e.g. 2007-05-17'),
+  );
+  $form['magnitudeLower'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Minimum Magnitude'),
+    '#description' => t('e.g. 2007-05-17'),
+  );
+  $form['magnitudeUpper'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Maximum Magnitude'),
+    '#description' => t('e.g. 2007-05-17'),
+  );
+  
+//http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?startDate=2007-05-17&endDate=2007-05-18&latLower=-45&latUpper=-40&longLower=173&longUpper=176&depthLower=0&depthUpper=180&magnitudeLower=0&magnitudeUpper=7.5&stationsLower=5&phasesLower=5&errorUpper=0.15
+
   $form['search'] = array(
     '#value' => t('Search'),
     '#type' => 'submit',
