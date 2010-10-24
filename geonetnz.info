@@ -1,3 +1,4 @@
 name = Geonet NZ API
 description = Queries the Quake Web Services
 core = 6.x
+dependencies[] = gmaps
