@@ -25,12 +25,39 @@ Earthquakes that occurred between the dates 2007-05-17 and 2007-05-19 inclusive,
 http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?startDate=2007-05-17&endDate=2007-05-18&latLower=-45&latUpper=-40&longLower=173&longUpper=176&depthLower=0&depthUpper=180&magnitudeLower=0&magnitudeUpper=7.5&stationsLower=5&phasesLower=5&errorUpper=0.15
 */
 function geonetnz_do_search($params) {
+  $results = array();
+  
   $url = GEONETNZ_ENDPOINT .'?';
   //startDate=2007-05-17&endDate=2007-05-18&latLower=-45&latUpper=-40&longLower=173&longUpper=176&depthLower=0&depthUpper=180&magnitudeLower=0&magnitudeUpper=7.5&
   foreach($params as $k=>$name) {
-    $urls .= urlencode("$k=$name&");
+    $url .= urlencode("$k=$name&");
   }
-  
+  $response = drupal_http_request($url);
+  drupal_set_message(print_r($result, 1));
+  if ($response->code == 200) {
+    $data = $response->data;
+    
+  }
+  else {
+      // Deal with HTTP errors
+    switch ($response->code) {
+      case 401:
+        drupal_set_message(t('Geonet returned @error. Check your settings at <strong class="drupal_link_admin_settings"><a href="@settings-path">@menu-path</a></strong></strong>.', array(
+          '@error' => 'HTTP '. $response->code .': '. $response->data,
+          '@menu-path' => DIGITALNZ_SETTINGS_MENU_PATH,
+          '@settings-path' => url(DIGITALNZ_SETTINGS_PATH),
+        )), 'error');
+        break;
+
+      default:
+        drupal_set_message(t('Geonet returned @error', array(
+          '@error' => 'HTTP '. $response->code .': '. strip_tags($response->data),
+        )), 'error');
+        break;
+    }
+  }
+
+  return $results;
 }
 
 
@@ -56,12 +83,12 @@ function geonetnz_menu() {
 
 function geonetnz_timeline_page() {
 }
-function geonetnz_search_page() {
+function geonetnz_search_page($search_id=null) {
   $output = drupal_get_form('geonetnz_search_form');
   return $output; 
 }
 
-function geonetnz_search_form() {
+function geonetnz_search_form($form_state) {
   $form['startDate'] = array(
     '#type' => 'textfield',
     '#title' => t('Start Date'),
@@ -119,12 +146,44 @@ function geonetnz_search_form() {
     '#value' => t('Search'),
     '#type' => 'submit',
   );
+
+
   return $form;
 }
-function geonetnz_search_form_submit($form_id, $form_state) {
+function geonetnz_search_form_submit($form, $form_state) {
   $startDate = $form_state['values']['startDate'];
-  drupal_goto("geonet?startDate=$startDate");
+  $endDate = $form_state['values']['endDate'];
+
+  $results = geonetnz_do_search(array(
+    'startDate' =>$form_state['values']['startDate'],
+    'endDate' => $form_state['values']['endDate'],
+    ));
+    
+  drupal_write_record('geonetnz_search', $search);
+  $node = array();
+  foreach($results as $r) {
+    drupal_set_message(print_r($r, 1));
+    $node = _geonetnz_get_node($r);
+    drupal_write_record($search->search_id, $node->nid);
+  }
+  drupal_goto('geonetnz/'. $search->search_id);
 }
+
+function _geonetnz_get_node($data) {
+  $node = db_fetch_object(db_query("SELECT * FROM {geonetnz_nodes} INNER JOIN {node} WHERE geonetid='%s'", $data['id']));
+  if (!$node->nid) {
+    $node->title = $data['name'];
+    $node->type = 'earthquake';
+    node_save($node);
+    $earthquake->long = $data['long'];
+    $earthquake->lat = $data['lat'];
+    $earthquake->recordedtime = $data['when'];
+    $earthquake->magnitude = $data['magnitude'];
+    $earthquake->depth = $data['depth'];
+    drupal_write_record('geonetnz_nodes', $earthquake);
+  }
+}
+
 
 function geonetnz_importer() {
   $batch = array(

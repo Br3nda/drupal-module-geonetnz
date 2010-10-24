@@ -1,0 +1,29 @@
+<?php
+
+class geonetnztest extends DrupalWebTestCase {
+  function getInfo() {
+    return array(
+      'name' => 'GeonetNZ',
+      'description' => 'Ensure that the geonetnz modules works',
+      'group' => 'geonetnz',
+    );
+  }
+  function setUp() {
+    parent::setUp('geonetnz');
+  }
+  function testSearch() {
+//     $adminuser = $this->drupalCreateUser( array('access'));
+    $this->drupalGet('geonetnz');
+    $this->assertText('Start Date');
+    $this->assertText('End Date');
+
+    
+    $this->assertResponse(200);
+    $search = array('startDate' => '2010-09-01', 'endDate' => '2010-09-10');
+    $this->drupalPost('geonetnz', $search, 'Search');
+
+    $this->assertResponse(200);
+    $this->assertText('Darfield');
+    
+  }
+}
