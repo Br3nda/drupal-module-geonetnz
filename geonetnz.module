@@ -89,7 +89,7 @@ function geonetnz_menu() {
 function geonetnz_search_page($search_id=null) {
   $output = drupal_get_form('geonetnz_search_form');
 
-  if (!isset($_GET['startDate']) && isset($_GET['endDate'])) {
+  if (!isset($_GET['startDate']) || isset($_GET['endDate'])) {
     return $output;
   }
   
@@ -122,18 +122,25 @@ function geonetnz_search_page($search_id=null) {
       check_plain($r->origin->longitude->value),
       t('@depth km', array('@depth' => $r->origin->depth->value)),
       check_plain($r->magnitude->mag->value),
-//       print_r($r->origin, 1)
     );
   }
-  $output .= theme('table', $headers, $rows);
-//   drupal_goto('geonetnz/'. $search->search_id);
-//http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?startDate=2007-05-17&endDate=2007-05-18&latLower=-45&latUpper=-40&longLower=173&longUpper=176&depthLower=0&depthUpper=180&magnitudeLower=0&magnitudeUpper=7.5&stationsLower=5&phasesLower=5&errorUpper=0.15
-  
+  $output .= theme('table', $headers, $rows);  
   return $output;
 }
 
 function geonetnz_search_form($form_state) {
   $form['#redirect'] = FALSE;
+
+  $form['display'] = array(
+    '#title' => t('Display as'),
+    '#type' => 'select',
+    '#options' => array(
+      'timemap' => t('Timeline Map'),
+      'table' => t('Table'),
+    ),
+    '#required' => TRUE
+  );
+  
   $form['dates'] = array(
     '#type' => 'fieldset',
     '#title' => t('Date Range'),
