@@ -36,10 +36,12 @@ function geonetnz_do_search($params) {
   }
   drupal_set_message($url);
   $response = drupal_http_request($url);
-  drupal_set_message(print_r($result, 1));
+      
   if ($response->code == 200) {
-    $data = $response->data;
-    drupal_set_message(print_r($response, 1));
+    $xml = new SimpleXMLElement($response->data);
+
+    return $xml->eventParameters->event;
+//     drupal_set_message(print_r($response, 1));
   }
   else {
       // Deal with HTTP errors
@@ -84,211 +86,204 @@ function geonetnz_menu() {
   return $items;
 }
 
-function geonetnz_timeline_page() {
-  $kml_link = url('geonetnz/kml');
-  $api_key = variable_get('gmaps_api_key', FALSE);
-  if (!$api_key) {
-    drupal_set_message(t('Google maps API key not set'), 'error');
-    return '';
-  }
-  return <<< STR
-   <script src="http://maps.google.com/maps?file=api&v=2&key=ABQIAAAASI0kCI-azC8RgbOZzWc3VRRarOQe_TKf_51Omf6UUSOFm7EABRRhO0PO4nBAO9FCmVDuowVwROLo3w"
-      type="text/javascript"></script>
-    <script type="text/javascript" src="../lib/timeline-1.2.js"></script>
-    <script src="../timemap.js" type="text/javascript"></script>
-    <script src="../param.js" type="text/javascript"></script>
-    <script src="../loaders/xml.js" type="text/javascript"></script>
-    <script src="../loaders/kml.js" type="text/javascript"></script>
-  <script type="text/javascript">
-
-var tm;
-function onLoad() {
-    tm = TimeMap.init({
-        mapId: "map",               // Id of map div element (required)
-        timelineId: "timeline",     // Id of timeline div element (required)
-        options: {
-            eventIconPath: "../images/"
-        },
-        datasets: [
-            {
-                title: "Violence in Kenya",
-                theme: "red",
-                type: "kml",     // Data to be loaded in KML - must be a local URL
-                options: {
-                    url: "$kml_link" // KML file to load
-                }
-            }
-        ],
-        bandInfo: [
-            {
-               width:          "85%",
-               intervalUnit:   Timeline.DateTime.DAY,
-           intervalPixels: 210
-            },
-            {
-               width:          "15%",
-               intervalUnit:   Timeline.DateTime.WEEK,
-           intervalPixels: 150,
-               showEventText:  false,
-               trackHeight:    0.2,
-               trackGap:       0.2
-            }
-        ]
-    });
-}
-    </script>
-  <link href="examples.css" type="text/css" rel="stylesheet"/>
-    <style>
-    div#timelinecontainer{ height: 310px; }
-    div#mapcontainer{ height: 300px; }
-    </style>
-  </head>
-
-  <body onload="onLoad();" onunload="GUnload();">
-    <div id="help">
-    <h1>KML Dataset</h1>
-    In this example, we're loading a KML file of reports of violence in Kenya (data courtesy <a href="http://www.ushahidi.com">www.ushahidi.com</a>, though it looks like the links no longer work). The bandInfo setting allows us to set a custom layout the timeline, and we've resized the timeline and map with CSS. (Note that some browsers will throw an error if if you're viewing this locally, due to cross-site scripting restrictions.)
-    </div>
-    <div id="timemap">
-        <div id="timelinecontainer">
-          <div id="timeline"></div>
-        </div>
-        <div id="mapcontainer">
-          <div id="map"></div>
-        </div>
-    </div>
-STR;
-}
-function geonetnz_timeline_kml() {
-  $startDate = '2010-09-04';
-  $endDate = '2010-09-05';
-  $kml = geonetnz_get_kml($startDate, $endDate);
-  echo $kml;
-}
 function geonetnz_search_page($search_id=null) {
   $output = drupal_get_form('geonetnz_search_form');
-  return $output; 
-}
-
-function geonetnz_get_kml($startDate, $endDate) {
-  $url = sprintf('http://magma.geonet.org.nz/services/quake/kml/2.2/search?startDate=%s&endDate=%s', urlencode($startDate), urlencode($endDate));
-    drupal_set_message($url);
-  $response = drupal_http_request($url);
-//   drupal_set_message(print_r($result, 1));
-  if ($response->code == 200) {
-    $data = $response->data;
-    drupal_set_message(print_r($response, 1));
-    return $data;
-  }
-  else {
-      // Deal with HTTP errors
-    switch ($response->code) {
-      case 401:
-        drupal_set_message(t('Geonet returned @error. Check your settings at <strong class="drupal_link_admin_settings"><a href="@settings-path">@menu-path</a></strong></strong>.', array(
-          '@error' => 'HTTP '. $response->code .': '. $response->data,
-          '@menu-path' => DIGITALNZ_SETTINGS_MENU_PATH,
-          '@settings-path' => url(DIGITALNZ_SETTINGS_PATH),
-        )), 'error');
-        break;
-
-      default:
-        drupal_set_message(t('Geonet returned @error', array(
-          '@error' => 'HTTP '. $response->code .': '. strip_tags($response->data),
-        )), 'error');
-        break;
-    }
-  }
-
+  return $output;
 }
 
 function geonetnz_search_form($form_state) {
-  $form['startDate'] = array(
+//   $form['#multistep'] = TRUE;
+  $form['#redirect'] = FALSE;
+  $form['dates'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Date Range'),
+    '#collapsed' => FALSE,
+    '#collapsible' => TRUE,
+  );
+  $form['dates']['startDate'] = array(
     '#type' => 'textfield',
     '#title' => t('Start Date (UTC)'),
     '#description' => t('e.g. 2007-05-17. format is yyyy-mm-ddThh:MM:ss and times are in UTC (GMT)'),
     '#default_value' => '2010-09-04',
     '#required' => TRUE,
   );
-  $form['endDate'] = array(
+  $form['dates']['endDate'] = array(
     '#type' => 'textfield',
     '#title' => t('End Date (UTC)'),
     '#description' => t('e.g. 2007-05-17. format is yyyy-mm-ddThh:MM:ss and times are in UTC (GMT)'),
     '#default_value' => '2010-09-05',
     '#required' => TRUE,
   );
-  $form['latLower'] = array(
+  $form['geo'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Geo Co-ordinates'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['geo']['latLower'] = array(
     '#type' => 'textfield',
     '#title' => t('Latitude'),
     '#description' => t('e.g. 2007-05-17. '),
   );
-  $form['latUpper'] = array(
+  $form['geo']['latUpper'] = array(
     '#type' => 'textfield',
     '#title' => t('to Latitude'),
     '#description' => t('e.g. 2007-05-17'),
   );
-  $form['longLower'] = array(
+  $form['geo']['longLower'] = array(
     '#type' => 'textfield',
     '#title' => t('Longitude'),
     '#description' => t('e.g. 2007-05-17'),
   );
-  $form['longUpper'] = array(
+  $form['geo']['longUpper'] = array(
     '#type' => 'textfield',
     '#title' => t('to Longitude'),
     '#description' => t('e.g. 2007-05-17'),
   );
-  $form['depthLower'] = array(
+  $form['depth'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Depth'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['depth']['depthLower'] = array(
     '#type' => 'textfield',
     '#title' => t('Minimum Depth'),
     '#description' => t('e.g. 2007-05-17'),
   );
-  $form['depthUpper'] = array(
+  $form['depth']['depthUpper'] = array(
     '#type' => 'textfield',
     '#title' => t('Maximum Depth'),
     '#description' => t('e.g. 2007-05-17'),
   );
-  $form['magnitudeLower'] = array(
+  $form['magnitude'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Magnitude'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['magnitude']['magnitudeLower'] = array(
     '#type' => 'textfield',
     '#title' => t('Minimum Magnitude'),
     '#description' => t('e.g. 2007-05-17'),
   );
-  $form['magnitudeUpper'] = array(
+  $form['magnitude']['magnitudeUpper'] = array(
     '#type' => 'textfield',
     '#title' => t('Maximum Magnitude'),
     '#description' => t('e.g. 2007-05-17'),
   );
-  
-//http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?startDate=2007-05-17&endDate=2007-05-18&latLower=-45&latUpper=-40&longLower=173&longUpper=176&depthLower=0&depthUpper=180&magnitudeLower=0&magnitudeUpper=7.5&stationsLower=5&phasesLower=5&errorUpper=0.15
-
   $form['search'] = array(
     '#value' => t('Search'),
     '#type' => 'submit',
   );
-
-
   return $form;
 }
-function geonetnz_search_form_submit($form, $form_state) {
-  $startDate = $form_state['values']['startDate'];
-  $endDate = $form_state['values']['endDate'];
+function geonetnz_search_form_submit($form_id, $form_state) {
+  drupal_goto('geonetnz', $form_state['values']);
+}
 
-  $results = geonetnz_do_search(array(
-    'startDate' =>$form_state['values']['startDate'],
-    'endDate' => $form_state['values']['endDate'],
-    ));
-    
-  drupal_write_record('geonetnz_search', $search);
-  $node = array();
-  foreach($results as $r) {
-    drupal_set_message(print_r($r, 1));
-    $node = _geonetnz_get_node($r);
-    drupal_write_record($search->search_id, $node->nid);
-  }
-  drupal_goto('geonetnz/'. $search->search_id);
+// function geonetnz_s
+//   drupal_goto($url);
+  //   $results = geonetnz_do_search(array(
+//     'startDate' =>$form_state['values']['startDate'],
+//     'endDate' => $form_state['values']['endDate'],
+//     ));
+//
+//   $node = array();
+//   foreach($results as $r) {
+// //     $node = _geonetnz_get_node($r);
+//     drupal_write_record('geonet_search_results', $earthquake);
+//   }
+//   drupal_goto('geonetnz/'. $search->search_id);
+//http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?startDate=2007-05-17&endDate=2007-05-18&latLower=-45&latUpper=-40&longLower=173&longUpper=176&depthLower=0&depthUpper=180&magnitudeLower=0&magnitudeUpper=7.5&stationsLower=5&phasesLower=5&errorUpper=0.15
+
+// }
+
+function geonetnz_search_results_page() {
+
 }
 
 function _geonetnz_get_node($data) {
   $node = db_fetch_object(db_query("SELECT * FROM {geonetnz_nodes} INNER JOIN {node} WHERE geonetid='%s'", $data['id']));
   if (!$node->nid) {
+  /*
+            [142] => SimpleXMLElement Object
+                (
+                    [@attributes] => Array
+                        (
+                            [publicID] => smi:geonet.org.nz/event/3366909g
+                        )
+
+                    [type] => earthquake
+                    [preferredOriginID] => smi:geonet.org.nz/ori/461714/GROPE
+                    [preferredMagnitudeID] => smi:geonet.org.nz/mag/461714/GROPE/ML
+                    [origin] => SimpleXMLElement Object
+                        (
+                            [@attributes] => Array
+                                (
+                                    [publicID] => smi:geonet.org.nz/ori/461714/GROPE
+                                )
+
+                            [type] => hypocenter
+                            [evaluationMode] => manual
+                            [evaluationStatus] => confirmed
+                            [referenceSystemID] => smi:ogc.def.crs/EPSG/4272
+                            [time] => SimpleXMLElement Object
+                                (
+                                    [value] => 2010-09-04T23:58:59.099Z
+                                    [uncertainty] => 0.09479
+                                )
+
+                            [latitude] => SimpleXMLElement Object
+                                (
+                                    [value] => -43.60982
+                                    [uncertainty] => 0.00709
+                                )
+
+                            [longitude] => SimpleXMLElement Object
+                                (
+                                    [value] => 172.24875
+                                    [uncertainty] => 0.00685
+                                )
+
+                            [depth] => SimpleXMLElement Object
+                                (
+                                    [value] => 5
+                                )
+
+                            [depthType] => operator assigned
+                            [quality] => SimpleXMLElement Object
+                                (
+                                    [azimuthalGap] => 154
+                                    [minimumDistance] => 30.47
+                                    [maximumDistance] => 97.15
+                                    [usedPhaseCount] => 8
+                                    [usedStationCount] => 5
+                                    [standardError] => 0.18028
+                                )
+
+                        )
+
+                    [magnitude] => SimpleXMLElement Object
+                        (
+                            [@attributes] => Array
+                                (
+                                    [publicID] => smi:geonet.org.nz/mag/461714/GROPE/ML
+                                )
+
+                            [mag] => SimpleXMLElement Object
+                                (
+                                    [value] => 3.265
+                                    [uncertainty] => 0.137
+                                )
+
+                            [type] => ML
+                            [stationCount] => 8
+                            [originID] => smi:geonet.org.nz/ori/461714/GROPE
+                        )
+
+                )
+*/
     $node->title = $data['name'];
     $node->type = 'earthquake';
     node_save($node);
@@ -300,7 +295,6 @@ function _geonetnz_get_node($data) {
     drupal_write_record('geonetnz_nodes', $earthquake);
   }
 }
-
 
 function geonetnz_importer() {
   $batch = array(
