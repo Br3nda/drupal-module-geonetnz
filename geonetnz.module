@@ -92,7 +92,6 @@ function geonetnz_search_page($search_id=null) {
 }
 
 function geonetnz_search_form($form_state) {
-//   $form['#multistep'] = TRUE;
   $form['#redirect'] = FALSE;
   $form['dates'] = array(
     '#type' => 'fieldset',
