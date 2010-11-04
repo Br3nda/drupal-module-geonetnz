@@ -88,6 +88,36 @@ function geonetnz_menu() {
 
 function geonetnz_search_page($search_id=null) {
   $output = drupal_get_form('geonetnz_search_form');
+
+  if (!isset($_GET['startDate']) && isset($_GET['endDate'])) {
+    return $output;
+  }
+  
+  $startDate = $_GET['startDate'];
+  if (!preg_match('!^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$!', $startDate)) {
+    form_set_error('startDate', 'Invalid Start Date');
+    return $output;
+  }
+  $endDate = $_GET['endDate'];
+  if (!preg_match('!^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$!', $endDate)) {
+    form_set_error('endDate', 'Invalid End Date');
+    return $output;
+  }
+  
+  
+  $results = geonetnz_do_search(array(
+    'startDate' => $startDate,
+    'endDate' => $endDate,
+    ));
+//
+//   $node = array();
+//   foreach($results as $r) {
+// //     $node = _geonetnz_get_node($r);
+//     drupal_write_record('geonet_search_results', $earthquake);
+//   }
+//   drupal_goto('geonetnz/'. $search->search_id);
+//http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?startDate=2007-05-17&endDate=2007-05-18&latLower=-45&latUpper=-40&longLower=173&longUpper=176&depthLower=0&depthUpper=180&magnitudeLower=0&magnitudeUpper=7.5&stationsLower=5&phasesLower=5&errorUpper=0.15
+  
   return $output;
 }
 
@@ -183,18 +213,6 @@ function geonetnz_search_form_submit($form_id, $form_state) {
 
 // function geonetnz_s
 //   drupal_goto($url);
-  //   $results = geonetnz_do_search(array(
-//     'startDate' =>$form_state['values']['startDate'],
-//     'endDate' => $form_state['values']['endDate'],
-//     ));
-//
-//   $node = array();
-//   foreach($results as $r) {
-// //     $node = _geonetnz_get_node($r);
-//     drupal_write_record('geonet_search_results', $earthquake);
-//   }
-//   drupal_goto('geonetnz/'. $search->search_id);
-//http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?startDate=2007-05-17&endDate=2007-05-18&latLower=-45&latUpper=-40&longLower=173&longUpper=176&depthLower=0&depthUpper=180&magnitudeLower=0&magnitudeUpper=7.5&stationsLower=5&phasesLower=5&errorUpper=0.15
 
 // }
 
