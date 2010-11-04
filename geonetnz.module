@@ -109,12 +109,23 @@ function geonetnz_search_page($search_id=null) {
     'startDate' => $startDate,
     'endDate' => $endDate,
     ));
+  $headers = array(t('Type'), t('Latitude'), t('Longitude'), t('Depth'), t('Magnitude'));
 //
 //   $node = array();
-//   foreach($results as $r) {
+  foreach($results as $r) {
 // //     $node = _geonetnz_get_node($r);
 //     drupal_write_record('geonet_search_results', $earthquake);
-//   }
+    $rows[] = array(
+      check_plain($r->type),
+      check_plain($r->origin->time->value),
+      check_plain($r->origin->latitude->value),
+      check_plain($r->origin->longitude->value),
+      t('@depth km', array('@depth' => $r->origin->depth->value)),
+      check_plain($r->magnitude->mag->value),
+//       print_r($r->origin, 1)
+    );
+  }
+  $output .= theme('table', $headers, $rows);
 //   drupal_goto('geonetnz/'. $search->search_id);
 //http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?startDate=2007-05-17&endDate=2007-05-18&latLower=-45&latUpper=-40&longLower=173&longUpper=176&depthLower=0&depthUpper=180&magnitudeLower=0&magnitudeUpper=7.5&stationsLower=5&phasesLower=5&errorUpper=0.15
   
