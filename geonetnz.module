@@ -89,7 +89,7 @@ function geonetnz_menu() {
 function geonetnz_search_page($search_id=null) {
   $output = drupal_get_form('geonetnz_search_form');
 
-  if (!isset($_GET['startDate']) || isset($_GET['endDate'])) {
+  if (!isset($_GET['startDate']) || !isset($_GET['endDate'])) {
     return $output;
   }
   
@@ -151,14 +151,14 @@ function geonetnz_search_form($form_state) {
     '#type' => 'textfield',
     '#title' => t('Start Date (UTC)'),
     '#description' => t('e.g. 2007-05-17. format is yyyy-mm-ddThh:MM:ss and times are in UTC (GMT)'),
-    '#default_value' => '2010-09-04',
+    '#default_value' => isset($_GET['startDate']) ? $_GET['startDate'] : '2010-09-04',
     '#required' => TRUE,
   );
   $form['dates']['endDate'] = array(
     '#type' => 'textfield',
     '#title' => t('End Date (UTC)'),
     '#description' => t('e.g. 2007-05-17. format is yyyy-mm-ddThh:MM:ss and times are in UTC (GMT)'),
-    '#default_value' => '2010-09-05',
+    '#default_value' => isset($_GET['endDate']) ? $_GET['endDate'] : '2010-09-04',
     '#required' => TRUE,
   );
   $form['geo'] = array(
