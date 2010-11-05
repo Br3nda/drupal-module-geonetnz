@@ -26,7 +26,8 @@ http://magma.geonet.org.nz/services/quake/quakeml/1.0.1/query?startDate=2007-05-
 */
 function geonetnz_do_search($params) {
   $results = array();
-  
+
+  //http://drupal/geonetnz?display=timemap&startDate=1920-09-04&endDate=1925-10-04&latLower=&latUpper=&longLower=&longUpper=&depthLower=&depthUpper=&magnitudeLower=4&magnitudeUpper=&op=Search&search=Search&form_build_id=form-67f659a904666572f13471b1580414ec&form_id=geonetnz_search_form
   $url = GEONETNZ_ENDPOINT .'?';
   //startDate=2007-05-17&endDate=2007-05-18&latLower=-45&latUpper=-40&longLower=173&longUpper=176&depthLower=0&depthUpper=180&magnitudeLower=0&magnitudeUpper=7.5&
   foreach($params as $k=>$v) {
@@ -103,23 +104,53 @@ function geonetnz_search_page($search_id=null) {
     form_set_error('endDate', 'Invalid End Date');
     return $output;
   }
+
+  if(isset($_GET['magnitudeLower'])) {
+    $magnitudeLower = $_GET['magnitudeLower'];
+    if (preg_match('![0-9+](\.[0-9+])$!', $magnitudeLower)) {
+      form_set_error('magnitudeLower', t('Invalid Minimum Magnitude'));
+      return $output;
+    }
+  }
+    if(isset($_GET['magnitudeUpper'])) {
+    $magnitudeUpper = $_GET['magnitudeUpper'];
+    if (preg_match('![0-9+](\.[0-9+])$!', $magnitudeUpper)) {
+      form_set_error('magnitudeUpper', t('Invalid Maximum Magnitude'));
+      return $output;
+    }
+  }
   
   
   $results = geonetnz_do_search(array(
     'startDate' => $startDate,
     'endDate' => $endDate,
+    'magnitudeLower' => $magnitudeLower,
+    'magnitudeUpper' => $magnitudeUpper,
     ));
-  $headers = array(t('Type'), t('Latitude'), t('Longitude'), t('Depth'), t('Magnitude'));
+  $headers = array(/*t('Type'), */t('Time'), t('Co-ords'), t('Nearby Places'), t('Depth'), t('Magnitude'));
 //
 //   $node = array();
   foreach($results as $r) {
 // //     $node = _geonetnz_get_node($r);
 //     drupal_write_record('geonet_search_results', $earthquake);
+    $places_nearby = geonames_query(
+      'nearby',
+      array(
+        'lat' => $r->origin->latitude->value,
+        'lng' => $r->origin->longitude->value,
+        'maxrows' => 3
+      ),
+      $options
+    );
+    $places = array();
+//     foreach($places_nearby->results as $p) {
+//       $places[] = $p['name'];
+//     }
     $rows[] = array(
-      check_plain($r->type),
+//       check_plain($r->type),
       check_plain($r->origin->time->value),
-      check_plain($r->origin->latitude->value),
-      check_plain($r->origin->longitude->value),
+      t('@lat,@long', array('@lat' => $r->origin->latitude->value, '@long' => $r->origin->longitude->value)),
+      check_plain(implode($places, ', ')),
       t('@depth km', array('@depth' => $r->origin->depth->value)),
       check_plain($r->magnitude->mag->value),
     );
@@ -207,17 +238,19 @@ function geonetnz_search_form($form_state) {
     '#type' => 'fieldset',
     '#title' => t('Magnitude'),
     '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+    '#collapsed' => !(isset($_GET['magnitudeLower']) || isset($_GET['magnitudeUpper'])),
   );
   $form['magnitude']['magnitudeLower'] = array(
     '#type' => 'textfield',
     '#title' => t('Minimum Magnitude'),
     '#description' => t('e.g. 2007-05-17'),
+    '#default_value' => isset($_GET['magnitudeLower']) ? $_GET['magnitudeLower'] : '',
   );
   $form['magnitude']['magnitudeUpper'] = array(
     '#type' => 'textfield',
     '#title' => t('Maximum Magnitude'),
     '#description' => t('e.g. 2007-05-17'),
+    '#default_value' => isset($_GET['magnitudeUpper']) ? $_GET['magnitudeUpper'] : '',
   );
   $form['search'] = array(
     '#value' => t('Search'),
