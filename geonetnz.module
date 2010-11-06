@@ -128,8 +128,6 @@ function geonetnz_search_results_table($results) {
 //
 //   $node = array();
   foreach($results as $r) {
-// //     $node = _geonetnz_get_node($r);
-//     drupal_write_record('geonet_search_results', $earthquake);
     $places_nearby = geonames_query(
       'nearby',
       array(
