@@ -1,4 +1,0 @@
-Name=Geo Rippr
-description=Imports earthquakes from geonetnz as nodes
-dependencies[]=location
-dependencies[]=geonetnz
