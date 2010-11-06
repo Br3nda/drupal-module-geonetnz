@@ -74,16 +74,6 @@ function geonetnz_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_NORMAL_ITEM,
   );
-  $items['geonetnz/timeline'] = array(
-    'title' => t('Timeline'),
-    'page callback' => 'geonetnz_timeline_page',
-    'access arguments' => array('access content'),
-  );
-  $items['geonetnz/import'] = array(
-    'title' => t('Import'),
-    'page callback' => 'geonetnz_import',
-    'access arguments' => array('import geonet data'),
-  );
   return $items;
 }
 
@@ -112,7 +102,7 @@ function geonetnz_search_page($search_id=null) {
       return $output;
     }
   }
-    if(isset($_GET['magnitudeUpper'])) {
+  if(isset($_GET['magnitudeUpper'])) {
     $magnitudeUpper = $_GET['magnitudeUpper'];
     if (preg_match('![0-9+](\.[0-9+])$!', $magnitudeUpper)) {
       form_set_error('magnitudeUpper', t('Invalid Maximum Magnitude'));
@@ -126,7 +116,14 @@ function geonetnz_search_page($search_id=null) {
     'endDate' => $endDate,
     'magnitudeLower' => $magnitudeLower,
     'magnitudeUpper' => $magnitudeUpper,
-    ));
+    )
+  );
+
+  $output .= geonetnz_search_results_table($results);
+  return $output;
+}
+
+function geonetnz_search_results_table($results) {
   $headers = array(/*t('Type'), */t('Time'), t('Co-ords'), t('Nearby Places'), t('Depth'), t('Magnitude'));
 //
 //   $node = array();
@@ -143,11 +140,11 @@ function geonetnz_search_page($search_id=null) {
       $options
     );
     $places = array();
-//     foreach($places_nearby->results as $p) {
-//       $places[] = $p['name'];
-//     }
+     foreach($places_nearby->results as $p) {
+       $places[] = $p['name'];
+    }
     $rows[] = array(
-//       check_plain($r->type),
+      check_plain($r->type),
       check_plain($r->origin->time->value),
       t('@lat,@long', array('@lat' => $r->origin->latitude->value, '@long' => $r->origin->longitude->value)),
       check_plain(implode($places, ', ')),
@@ -159,19 +156,7 @@ function geonetnz_search_page($search_id=null) {
   return $output;
 }
 
-function geonetnz_search_form($form_state) {
-  $form['#redirect'] = FALSE;
-
-  $form['display'] = array(
-    '#title' => t('Display as'),
-    '#type' => 'select',
-    '#options' => array(
-      'timemap' => t('Timeline Map'),
-      'table' => t('Table'),
-    ),
-    '#required' => TRUE
-  );
-  
+function geonetnz_search_form($form_state) {  
   $form['dates'] = array(
     '#type' => 'fieldset',
     '#title' => t('Date Range'),
@@ -262,125 +247,3 @@ function geonetnz_search_form_submit($form_id, $form_state) {
   drupal_goto('geonetnz', $form_state['values']);
 }
 
-// function geonetnz_s
-//   drupal_goto($url);
-
-// }
-
-function geonetnz_search_results_page() {
-
-}
-
-function _geonetnz_get_node($data) {
-  $node = db_fetch_object(db_query("SELECT * FROM {geonetnz_nodes} INNER JOIN {node} WHERE geonetid='%s'", $data['id']));
-  if (!$node->nid) {
-  /*
-            [142] => SimpleXMLElement Object
-                (
-                    [@attributes] => Array
-                        (
-                            [publicID] => smi:geonet.org.nz/event/3366909g
-                        )
-
-                    [type] => earthquake
-                    [preferredOriginID] => smi:geonet.org.nz/ori/461714/GROPE
-                    [preferredMagnitudeID] => smi:geonet.org.nz/mag/461714/GROPE/ML
-                    [origin] => SimpleXMLElement Object
-                        (
-                            [@attributes] => Array
-                                (
-                                    [publicID] => smi:geonet.org.nz/ori/461714/GROPE
-                                )
-
-                            [type] => hypocenter
-                            [evaluationMode] => manual
-                            [evaluationStatus] => confirmed
-                            [referenceSystemID] => smi:ogc.def.crs/EPSG/4272
-                            [time] => SimpleXMLElement Object
-                                (
-                                    [value] => 2010-09-04T23:58:59.099Z
-                                    [uncertainty] => 0.09479
-                                )
-
-                            [latitude] => SimpleXMLElement Object
-                                (
-                                    [value] => -43.60982
-                                    [uncertainty] => 0.00709
-                                )
-
-                            [longitude] => SimpleXMLElement Object
-                                (
-                                    [value] => 172.24875
-                                    [uncertainty] => 0.00685
-                                )
-
-                            [depth] => SimpleXMLElement Object
-                                (
-                                    [value] => 5
-                                )
-
-                            [depthType] => operator assigned
-                            [quality] => SimpleXMLElement Object
-                                (
-                                    [azimuthalGap] => 154
-                                    [minimumDistance] => 30.47
-                                    [maximumDistance] => 97.15
-                                    [usedPhaseCount] => 8
-                                    [usedStationCount] => 5
-                                    [standardError] => 0.18028
-                                )
-
-                        )
-
-                    [magnitude] => SimpleXMLElement Object
-                        (
-                            [@attributes] => Array
-                                (
-                                    [publicID] => smi:geonet.org.nz/mag/461714/GROPE/ML
-                                )
-
-                            [mag] => SimpleXMLElement Object
-                                (
-                                    [value] => 3.265
-                                    [uncertainty] => 0.137
-                                )
-
-                            [type] => ML
-                            [stationCount] => 8
-                            [originID] => smi:geonet.org.nz/ori/461714/GROPE
-                        )
-
-                )
-*/
-    $node->title = $data['name'];
-    $node->type = 'earthquake';
-    node_save($node);
-    $earthquake->long = $data['long'];
-    $earthquake->lat = $data['lat'];
-    $earthquake->recordedtime = $data['when'];
-    $earthquake->magnitude = $data['magnitude'];
-    $earthquake->depth = $data['depth'];
-    drupal_write_record('geonetnz_nodes', $earthquake);
-  }
-}
-
-function geonetnz_importer() {
-  $batch = array(
-    'title' => t('Importing Earthquake Data'),
-    'operations' => array(
-      array('geonet_import_batch_process', array()),
-    ),
-    'finished' => 'my_finished_callback',
-  );
-  batch_set($batch);
-  // only needed if not inside a form _submit handler :
-  batch_process();
-}
-
-function geonet_import_batch_process(&$context) {
-  if (empty($context['sandbox'])) {
-    $context['sandbox']['progress'] = 0;
-    $context['sandbox']['current_node'] = 0;
-    $context['sandbox']['max'] = db_result(db_query('SELECT COUNT(DISTINCT nid) FROM {node}'));
-  }
-}
