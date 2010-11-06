@@ -1,0 +1,3 @@
+Name= Geonet NZ Import
+description=Imports earthquakes from geonetnz as nodes
+dependencies[]=geonetnz

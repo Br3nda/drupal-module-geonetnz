@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * Implementation of hook_nodeinfo().
+ */
+function georippr_nodeinfo() {
+  return array(
+    'earthquake' => array(
+      'name' => t('Earthquake'), 
+      'module' => 'georippr', 
+      'description' => t("An earthquake imported by georippr"),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function georippr_menu() {
+  $items['geonetnz/import'] = array(
+    'page callback' => 'georippr_import_page',
+    'access arguments' => array('run batch import of eathquake data'),
+    'type' => MENU_NORMAL_ITEM,
+    'title' => 'Import earthquake data',
+    'file' => 'georippr.batch.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implementationof hook_perm().
+ */
+function georippr_perm() {
+  return array('run batch import of eathquake data');
+}
+
