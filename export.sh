@@ -1,2 +1,2 @@
 #~/bin/bash
-git cvsexportcommit -c $1
+git cvsexportcommit -a -c $1
